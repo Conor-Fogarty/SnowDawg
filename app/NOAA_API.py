@@ -1,8 +1,18 @@
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from datetime import datetime
+from flask_cors import CORS
+from user_Backend import user_bp
 
-app = Flask(__name__)
+app = Flask('__name__')
+CORS(app)
+
+# Register user blueprint
+app.register_blueprint(user_bp, url_prefix='/api')
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 # Sample coordinates for Northeast Ikon Pass mountains
 RESORT_COORDINATES = {
@@ -46,4 +56,4 @@ def forecast(resort):
     return jsonify({"resort": resort, "forecast": forecast_data})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

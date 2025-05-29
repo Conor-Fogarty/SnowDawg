@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 from flask import Blueprint, request, jsonify
 import sqlite3
 import hashlib
@@ -34,6 +35,8 @@ def register():
     username = data.get("username")
     password = data.get("password")
     email = data.get("email")
+    if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email):
+        return jsonify({"error": "Invalid email format"}), 400
     favorite_mountains = ",".join(data.get("favorite_mountains", []))
     location = data.get("location")
     pass_type = data.get("pass_type")
@@ -54,6 +57,35 @@ def register():
         return jsonify({"message": "User registered successfully"})
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username already exists"}), 409
+
+@user_bp.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    if not all([username, password]):
+        return jsonify({"error": "Missing username or password"}), 400
+
+    try:
+        with sqlite3.connect("users.db") as conn:
+            c = conn.cursor()
+            c.execute("SELECT password FROM users WHERE username = ?", (username,))
+            row = c.fetchone()
+
+            if not row:
+                # Avoid revealing if the user exists; generic error
+                return jsonify({"error": "Invalid username or password"}), 401
+            
+            stored_password = row[0]
+            hashed_password = hash_password(password)
+
+            if hashed_password == stored_password:
+                return jsonify({"message": "Login successful"})
+            else:
+                return jsonify({"error": "Invalid username or password"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 
 @user_bp.route("/api/user/<username>", methods=["GET"])

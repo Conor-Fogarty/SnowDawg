@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ski Resort Auth</title>
+    <link rel="stylesheet" href="/static/CSS/sign_up_page.css">
+    
+</head>
+<body>
+    <div class="auth-container">
+        <div class="tabs">
+            <button class="tab active" onclick="showForm('signup')">Sign Up</button>
+            <button class="tab" onclick="showForm('login')">Login</button>
+        </div>
+
+        <!-- Sign Up Form -->
+        <div id="signup-form" class="form-container active">
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="favorite_mountains">Favorite Mountains (comma-separated)</label>
+                    <input type="text" id="favorite_mountains" name="favorite_mountains">
+                </div>
+                <div class="form-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" name="location">
+                </div>
+                <div class="form-group">
+                    <label for="pass_type">Pass Type</label>
+                    <input type="text" id="pass_type" name="pass_type">
+                </div>
+                <button type="submit">Create Account</button>
+            </form>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-form" class="form-container">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" required>
+                </div>
+                <button type="submit">Log In</button>
+            </form>
+        </div>
+
+        <div id="message"></div>
+    </div>
+
+    <script>
+        function showForm(formType) {
+            // Toggle tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent.toLowerCase().includes(formType));
+            });
+
+            // Toggle forms
+            document.getElementById('signup-form').classList.toggle('active', formType === 'signup');
+            document.getElementById('login-form').classList.toggle('active', formType === 'login');
+        }
+
+        function showMessage(text, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = isError ? 'error' : 'success';
+            messageDiv.style.display = 'block';
+            setTimeout(() => messageDiv.style.display = 'none', 5000);
+        }
+
+        // Handle Sign Up
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                username: e.target.username.value,
+                password: e.target.password.value,
+                email: e.target.email.value,
+                favorite_mountains: e.target.favorite_mountains.value.split(',').map(m => m.trim()),
+                location: e.target.location.value,
+                pass_type: e.target.pass_type.value
+            };
+
+            try {
+                const response = await fetch('api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Account created successfully!');
+                    e.target.reset();
+                } else {
+                    showMessage(data.error || 'Registration failed', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        });
+
+        // Handle Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                username: e.target.username.value,
+                password: e.target.password.value
+            };
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Login successful!');
+                    // Redirect or handle session here
+                    window.location.href = '/dashboard'; // Modify as needed
+                } else {
+                    showMessage(data.error || 'Login failed', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        });
+    </script>
+</body>
+</html>

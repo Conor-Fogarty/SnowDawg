@@ -31,3 +31,6 @@ class TestNOAAAPI(unittest.TestCase):
     def test_invalid_resort(self):
         response = self.client.get('/api/forecast/Narnia')
         self.assertEqual(response.status_code, 404)
+
+if __name__ == '__main__':
+    unittest.main()
